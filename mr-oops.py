@@ -22,6 +22,7 @@ class GameBoard:
         self.game_event = GameEvent(length)
         self.bullets = self.game_event.bullets
         self.game_board = self.game_event.game_board
+        self.game_board[self.player_x][self.player_y] = 1
 
         self.clock = pygame.time.Clock()
 
@@ -147,14 +148,14 @@ class GameEvent:
 
     def set_mode(self): 
         """
-        THREAD: switch current mode
+        THREAD: process current mode, shoot bullets
         """
         while len(self.event_queue) > 0:
             self.switch_mode.clear()
             self.current_event = self.event_queue.popleft()
             print(f"Current mode: {self.current_event}")
             while not self.switch_mode.is_set():
-                time.sleep(0.1)
+                self.shoot()
                     
     def set_shooter(self):
         shooter_count = random.choices(range(1, self.length-2))[0]
@@ -166,6 +167,7 @@ class GameEvent:
             for i in range(shooter_count):
                 self.game_board[self.current_shoot_poses[i][0]][self.current_shoot_poses[i][1]] = 2
             
+            print(self.game_board)
             time.sleep(0.2)
 
             for i in range(shooter_count):
@@ -189,10 +191,10 @@ class GameEvent:
         elif self.current_event == "PillarHell":  speed = random.randint(20, 30)
         
         for shooter in self.current_shoot_poses:
-            if shooter[0] == 0: deltas.append(speed, 0)                     # right
-            elif shooter[1] == 0: deltas.append(0, speed)                   # down
-            elif shooter[0] == self.length - 1: deltas.append(-speed, 0)    # left
-            elif shooter[1] == self.length - 1: deltas.append(0, -speed)    # up
+            if shooter[0] == 0: deltas.append((speed, 0))                   # right
+            elif shooter[1] == 0: deltas.append((0, speed))                 # down
+            elif shooter[0] == self.length - 1: deltas.append((-speed, 0))  # left
+            elif shooter[1] == self.length - 1: deltas.append((0, -speed))  # up
 
         draw_poses = []
         for pos in self.current_shoot_poses:
@@ -280,7 +282,6 @@ def run(game_board: GameBoard, game_event: GameEvent):
         print(f'starting in {i} seconds')
         time.sleep(1)
 
-    threading.Thread(target=game_event.set_shooter, daemon=True).start()
     threading.Thread(target=game_event.set_mode, daemon=True).start()
 
     running = True
