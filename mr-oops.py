@@ -150,13 +150,14 @@ class GameBoard:
         self.draw_board()
         self.draw_bullet()
         self.draw_arrow()
-        self.draw_text(f"Wave: {self.game_event.score}", 50, 50)
+        self.draw_text(f"Mode: {self.game_event.current_event}, Wave: {self.game_event.score}", 50, 50)
 
 class GameEvent: 
     def __init__(self, length, game_board, bullets, interval=0.8):
         self.length = length
         self.shoot_obj = ShootObject()
         self.event_queue = deque(["RollingStone", "IronCannon", "LaserWeapon"])
+        # self.event_queue = deque(["LaserWeapon", "LaserWeapon", "LaserWeapon"])
         self.current_event = None
 
         self.shoot_space = [[(0, i), (length-1, i)] for i in range(1, length-1)]
@@ -332,7 +333,7 @@ class ShootObject:
             self.bullets = [Bullet(pos[0], pos[1], delta[0], delta[1], color) for pos, delta in zip(poses, deltas)]
     
     class LaserWeapon:
-        def __init__(self, poses, deltas, exist_time=0.5, color=(222, 222, 130), is_collide=False):
+        def __init__(self, poses, deltas, exist_time=0.3, color=(222, 222, 130), is_collide=False):
             self.bullets = [Pillar(pos[0], pos[1], delta[0], delta[1], color, exist_time, is_collide) for pos, delta in zip(poses, deltas)]
     
     class PillarHell:
@@ -354,7 +355,9 @@ def run(game_board: GameBoard):
     running = True
     while running:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE) or game_end.is_set():
+            if (event.type == pygame.QUIT 
+                or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE) 
+                or game_end.is_set()):
                 running = False
             elif event.type == pygame.KEYDOWN:
                 game_board.handle_key_event(event)
@@ -363,7 +366,7 @@ def run(game_board: GameBoard):
         pygame.display.update()
         game_board.clock.tick(60)
 
-    print('game_end, your score:', game_board.game_event.total_score)
+    print('game over, your score:', game_board.game_event.total_score)
     pygame.quit()
     exit()
 
